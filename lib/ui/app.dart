@@ -1,4 +1,3 @@
-// ui/app.dart
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +11,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Inicializar el servicio en modo mock con datos estáticos
     final userService = UserService.mock(
       initialUser: UserModel(
         id: 'user123',
@@ -27,7 +25,6 @@ class MyApp extends StatelessWidget {
 
     return MultiProvider(
       providers: [
-        // Proveedor del controlador de perfil
         ChangeNotifierProvider(
           create: (_) => ProfileController(userService: userService),
         ),
@@ -82,7 +79,6 @@ class MyApp extends StatelessWidget {
               vertical: 16,
             ),
           ),
-          // cardTheme configurado por defecto para compatibilidad con la versión actual de Flutter
         ),
         home: const ProfileScreen(),
       ),
