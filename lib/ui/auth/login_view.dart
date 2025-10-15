@@ -317,7 +317,7 @@ class _LoginViewState extends State<LoginView> {
                           child: const Text(
                             'Regístrate aquí',
                             style: TextStyle(
-                              color: Color.fromARGB(255, 16, 121, 233),
+                              color: Color.fromARGB(255, 18, 122, 234),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
