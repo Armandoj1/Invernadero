@@ -2,22 +2,48 @@
 
 import 'package:flutter/material.dart';
 import 'package:invernadero/models/perfil.dart';
+import 'package:invernadero/models/user_model.dart';
 import 'package:invernadero/services/perfilservices.dart';
 
 
 class ProfileController extends ChangeNotifier {
   final UserService _userService;
   
-  UserModel? _user;
+  ProfileModel? _user;
   bool _isLoading = false;
   String? _error;
   
-  UserModel? get user => _user;
+  ProfileModel? get user => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
   ProfileController({required UserService userService})
       : _userService = userService;
+
+  // Establecer usuario desde AuthController
+  void setUserFromAuth(UserModel authUser) {
+    print('🔍 ProfileController - Datos recibidos del AuthController:');
+    print('Nombre: ${authUser.nombre}');
+    print('Apellido: ${authUser.apellido}');
+    print('Teléfono: ${authUser.telefono}');
+    print('Dirección: ${authUser.direccion}');
+    
+    _user = ProfileModel(
+      id: authUser.uid,
+      nombre: authUser.nombre ?? '',
+      apellido: authUser.apellido ?? '',
+      email: authUser.email,
+      telefono: authUser.telefono ?? '',
+      direccion: authUser.direccion ?? '',
+      fechaRegistro: DateTime.now(),
+    );
+    
+    print('🔍 ProfileController - ProfileModel creado:');
+    print('Teléfono: ${_user?.telefono}');
+    print('Dirección: ${_user?.direccion}');
+    
+    notifyListeners();
+  }
 
   // Cargar perfil
   Future<void> loadUserProfile(String userId) async {
@@ -58,7 +84,7 @@ class ProfileController extends ChangeNotifier {
         direccion: direccion,
       );
 
-      final success = await _userService.updateUserProfile(updatedUser);
+      final success = await _userService.updateUserProfile(_user!.id, updatedUser);
       
       if (success) {
         _user = updatedUser;
@@ -108,26 +134,22 @@ class ProfileController extends ChangeNotifier {
   }
 
   // Actualizar email
-  Future<bool> updateEmail(String newEmail) async {
-    if (_user == null) return false;
-
+  Future<void> updateEmail(String newEmail) async {
+    if (_user == null) return;
+    
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final success = await _userService.updateEmail(_user!.id, newEmail);
+      // Actualizar directamente en el modelo local
+      _user = _user!.copyWith(email: newEmail);
+      _error = null;
       
-      if (success) {
-        _user = _user!.copyWith(email: newEmail);
-        _error = null;
-      }
-      
-      return success;
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      return false;
-    } finally {
+      _error = 'Error al actualizar email: $e';
       _isLoading = false;
       notifyListeners();
     }

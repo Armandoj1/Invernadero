@@ -1,10 +1,10 @@
 // ui/home/edit_perfil.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'package:invernadero/controllers/perfilcontrollers.dart';
 import 'package:invernadero/models/perfil.dart';
-
-import 'package:provider/provider.dart';
 
 
 // ============================================
@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 // ============================================
 
 class EditProfileDialog extends StatefulWidget {
-  final UserModel user;
+  final ProfileModel user;
 
   const EditProfileDialog({super.key, required this.user});
 
@@ -541,12 +541,13 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> {
         );
       }
       
-      final success = await controller.updateEmail(_emailController.text);
+      await controller.updateEmail(_emailController.text);
 
       if (mounted) {
         Navigator.pop(context);
         
-        if (success) {
+        // Verificar si hubo error
+        if (controller.error == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✓ Correo actualizado correctamente'),
@@ -557,7 +558,7 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(controller.error ?? 'Error al cambiar correo'),
+              content: Text('Error: ${controller.error}'),
               backgroundColor: Colors.red,
             ),
           );

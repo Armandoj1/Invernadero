@@ -1,6 +1,6 @@
-// models/user_model.dart
+// models/profile_model.dart
 
-class UserModel {
+class ProfileModel {
   final String id;
   final String nombre;
   final String apellido;
@@ -9,7 +9,7 @@ class UserModel {
   final String? direccion;
   final DateTime fechaRegistro;
 
-  UserModel({
+  ProfileModel({
     required this.id,
     required this.nombre,
     required this.apellido,
@@ -20,8 +20,8 @@ class UserModel {
   });
 
   // Método para crear desde JSON
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
+  factory ProfileModel.fromJson(Map<String, dynamic> json) {
+    return ProfileModel(
       id: json['id'] ?? '',
       nombre: json['nombre'] ?? '',
       apellido: json['apellido'] ?? '',
@@ -48,7 +48,7 @@ class UserModel {
   }
 
   // Método para copiar con cambios
-  UserModel copyWith({
+  ProfileModel copyWith({
     String? id,
     String? nombre,
     String? apellido,
@@ -57,7 +57,7 @@ class UserModel {
     String? direccion,
     DateTime? fechaRegistro,
   }) {
-    return UserModel(
+    return ProfileModel(
       id: id ?? this.id,
       nombre: nombre ?? this.nombre,
       apellido: apellido ?? this.apellido,

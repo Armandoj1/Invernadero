@@ -1,7 +1,9 @@
 // ui/screens/profile_screen.dart
-import 'package:provider/provider.dart';
+import 'package:invernadero/controllers/auth_controller.dart';
 import 'package:invernadero/controllers/perfilcontrollers.dart';
 import 'package:invernadero/ui/home/editPerfil.dart';
+import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
 
@@ -16,11 +18,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Cargar perfil al iniciar sólo si no existe en memoria (modo mock ya lo provee)
+    // Usar directamente los datos del AuthController
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = context.read<ProfileController>();
-      if (controller.user == null) {
-        controller.loadUserProfile('user123');
+      final auth = Get.find<AuthController>();
+      
+      // Si hay un usuario autenticado, cargar desde Firestore directamente
+      if (auth.user != null) {
+        print('🔍 Perfil - Cargando datos desde Firestore para: ${auth.user!.uid}');
+        controller.loadUserProfile(auth.user!.uid);
       }
     });
   }
@@ -132,6 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildHeader(user) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -150,22 +157,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
             radius: 50,
             backgroundColor: const Color(0xFF1565C0),
             child: Text(
-              user.nombre[0].toUpperCase(),
+              user.nombre != null && user.nombre!.isNotEmpty 
+                  ? user.nombre![0].toUpperCase()
+                  : 'U',
               style: const TextStyle(fontSize: 36, color: Colors.white),
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            user.nombreCompleto,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+          Flexible(
+            child: Text(
+              user.displayName ?? '${user.nombre ?? ''} ${user.apellido ?? ''}'.trim(),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            user.email,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          Flexible(
+            child: Text(
+              user.email,
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         ],
       ),
