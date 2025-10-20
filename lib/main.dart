@@ -7,6 +7,9 @@ import 'package:invernadero/controllers/perfilcontrollers.dart';
 import 'package:invernadero/services/perfilservices.dart';
 import 'package:invernadero/models/perfil.dart';
 import 'package:invernadero/ui/home/perfil.dart';
+import 'package:invernadero/controllers/ia_control_controller.dart';
+import 'package:invernadero/services/ia_control_service.dart';
+import 'package:invernadero/ui/home/ia_control.dart';
 import 'controllers/auth_controller.dart';
 import 'firebase_options.dart';
 import 'ui/auth/login_view.dart';
@@ -21,10 +24,11 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Configurar Firestore con configuración explícita
+  // Configurar Firestore con configuración optimizada para evitar errores de conexión
   FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
+    persistenceEnabled: false,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    sslEnabled: true,
   );
 
   // Inicializar el controlador de autenticación
@@ -62,6 +66,9 @@ class MyApp extends StatelessWidget {
             return ProfileController(userService: UserService());
           },
         ),
+        ChangeNotifierProvider<IAControlController>(
+          create: (_) => IAControlController(service: IAControlService()),
+        ),
       ],
       child: GetMaterialApp(
         title: 'Invernadero',
@@ -97,6 +104,10 @@ class MyApp extends StatelessWidget {
           GetPage(
             name: '/profile',
             page: () => const ProfileScreen(),
+          ),
+          GetPage(
+            name: '/ia-control',
+            page: () => const IAControlScreen(),
           ),
         ],
       ),

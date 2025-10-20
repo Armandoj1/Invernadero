@@ -55,7 +55,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '80670752989',
     projectId: 'invernadero-61290',
     authDomain: 'invernadero-61290.firebaseapp.com',
-    storageBucket: 'invernadero-61290.firebasestorage.app',
+    storageBucket: 'invernadero-61290.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -63,6 +63,6 @@ class DefaultFirebaseOptions {
     appId: '1:80670752989:android:b709bbeb712c83601d9b34',
     messagingSenderId: '80670752989',
     projectId: 'invernadero-61290',
-    storageBucket: 'invernadero-61290.firebasestorage.app',
+    storageBucket: 'invernadero-61290.appspot.com',
   );
 }

@@ -21,16 +21,25 @@ class ProfileModel {
 
   // Método para crear desde JSON
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
+    final dynamic fecha = json['fechaRegistro'];
+    DateTime fechaReg;
+    if (fecha is String) {
+      fechaReg = DateTime.tryParse(fecha) ?? DateTime.now();
+    } else if (fecha is DateTime) {
+      fechaReg = fecha;
+    } else {
+      // Si viene como Timestamp de Firestore u otro tipo, usar ahora
+      fechaReg = DateTime.now();
+    }
+
     return ProfileModel(
-      id: json['id'] ?? '',
-      nombre: json['nombre'] ?? '',
-      apellido: json['apellido'] ?? '',
-      email: json['email'] ?? '',
-      telefono: json['telefono'],
-      direccion: json['direccion'],
-      fechaRegistro: json['fechaRegistro'] != null
-          ? DateTime.parse(json['fechaRegistro'])
-          : DateTime.now(),
+      id: (json['id'] ?? json['uid'] ?? '') as String,
+      nombre: (json['nombre'] ?? '') as String,
+      apellido: (json['apellido'] ?? '') as String,
+      email: (json['email'] ?? '') as String,
+      telefono: json['telefono'] as String?,
+      direccion: json['direccion'] as String?,
+      fechaRegistro: fechaReg,
     );
   }
 

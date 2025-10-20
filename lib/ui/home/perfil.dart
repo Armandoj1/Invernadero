@@ -2,6 +2,7 @@
 import 'package:invernadero/controllers/auth_controller.dart';
 import 'package:invernadero/controllers/perfilcontrollers.dart';
 import 'package:invernadero/ui/home/editPerfil.dart';
+import 'package:invernadero/models/perfil.dart';
 import 'package:provider/provider.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -67,7 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
           }
 
-          final user = controller.user!;
+          final user = controller.user ?? _profileFromAuth();
 
           return RefreshIndicator(
             onRefresh: () => controller.loadUserProfile(user.id),
@@ -136,6 +137,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  ProfileModel _profileFromAuth() {
+    final auth = Get.find<AuthController>();
+    final u = auth.user;
+    if (u != null) {
+      final parts = (u.displayName ?? '').trim().split(' ');
+      final nombre = parts.isNotEmpty && parts.first.isNotEmpty ? parts.first : 'Usuario';
+      final apellido = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+      return ProfileModel(
+        id: u.uid,
+        nombre: nombre,
+        apellido: apellido,
+        email: u.email,
+        telefono: u.telefono,
+        direccion: u.direccion,
+        fechaRegistro: DateTime.now(),
+      );
+    }
+    return ProfileModel(
+      id: '',
+      nombre: 'Usuario',
+      apellido: '',
+      email: '',
+      telefono: null,
+      direccion: null,
+      fechaRegistro: DateTime.now(),
+    );
+  }
+
   Widget _buildHeader(user) {
     return Container(
       width: double.infinity,
@@ -157,34 +186,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             radius: 50,
             backgroundColor: const Color(0xFF1565C0),
             child: Text(
-              user.nombre != null && user.nombre!.isNotEmpty 
-                  ? user.nombre![0].toUpperCase()
+              user.nombre.isNotEmpty 
+                  ? user.nombre[0].toUpperCase()
                   : 'U',
               style: const TextStyle(fontSize: 36, color: Colors.white),
             ),
           ),
           const SizedBox(height: 16),
-          Flexible(
-            child: Text(
-              user.displayName ?? '${user.nombre ?? ''} ${user.apellido ?? ''}'.trim(),
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
+          Text(
+            user.nombreCompleto,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
             ),
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
           ),
           const SizedBox(height: 4),
-          Flexible(
-            child: Text(
-              user.email,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
+          Text(
+            user.email,
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ],
       ),

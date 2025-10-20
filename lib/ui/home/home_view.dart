@@ -4,6 +4,8 @@ import 'dart:async';
 import '../../controllers/auth_controller.dart';
 import 'package:get/get.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
+import 'package:invernadero/controllers/ia_control_controller.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -154,6 +156,7 @@ class _HomeViewState extends State<HomeView> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+
           IconButton(
             icon: const Icon(Icons.account_circle),
             onPressed: () => Get.toNamed('/profile'),
@@ -205,6 +208,8 @@ class _HomeViewState extends State<HomeView> {
             // Estado del sistema IA
             _buildAiControls(),
             const SizedBox(height: 20),
+            
+
             
             // Tarjetas informativas
             _buildInfoCards(),
@@ -381,21 +386,49 @@ class _HomeViewState extends State<HomeView> {
                       color: Color(0xFF1565C0),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'IA Activa',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: _getAiModeColor(),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Modo: $_aiMode',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
+                    Consumer<IAControlController>(
+                      builder: (context, controller, _) {
+                        final modo = controller.control?.modo ?? _aiMode.toLowerCase();
+                        String display;
+                        Color color;
+                        switch (modo) {
+                          case 'automatico':
+                            display = 'Automático';
+                            color = const Color(0xFF00BCD4);
+                            break;
+                          case 'manual':
+                            display = 'Manual';
+                            color = const Color(0xFF1565C0);
+                            break;
+                          case 'hibrido':
+                            display = 'Híbrido';
+                            color = const Color(0xFF00B4D8);
+                            break;
+                          default:
+                            display = _aiMode;
+                            color = Colors.grey;
+                        }
+                        return Column(
+                          children: [
+                            Text(
+                              'IA Activa',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Modo: ' + display,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -408,6 +441,16 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildTrendChart() {
+    final width = MediaQuery.of(context).size.width;
+    final bool isSmall = width < 380;
+    final bool isMedium = width >= 380 && width < 480;
+    final bool isTiny = width < 330;
+    final double chartWidth = isTiny ? 380 : double.infinity;
+    final double chartHeight = isSmall ? 300 : (isMedium ? 280 : 320);
+    final double labelFont = isSmall ? 12 : 13;
+    final double leftReserved = isSmall ? 46 : 50;
+    final double bottomReserved = isSmall ? 32 : 36;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -443,129 +486,133 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            height: 200,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: true,
-                  horizontalInterval: 2,
-                  verticalInterval: 2,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: Colors.grey.shade300,
-                      strokeWidth: 1,
-                    );
-                  },
-                  getDrawingVerticalLine: (value) {
-                    return FlLine(
-                      color: Colors.grey.shade300,
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: chartWidth,
+              height: chartHeight,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: true,
+                    horizontalInterval: 2,
+                    verticalInterval: 2,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Colors.grey.shade300,
+                        strokeWidth: 1,
+                      );
+                    },
+                    getDrawingVerticalLine: (value) {
+                      return FlLine(
+                        color: Colors.grey.shade300,
+                        strokeWidth: 1,
+                      );
+                    },
                   ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: 4,
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        const style = TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        );
-                        Widget text;
-                        switch (value.toInt()) {
-                          case 0:
-                            text = const Text('00:00', style: style);
-                            break;
-                          case 6:
-                            text = const Text('06:00', style: style);
-                            break;
-                          case 12:
-                            text = const Text('12:00', style: style);
-                            break;
-                          case 18:
-                            text = const Text('18:00', style: style);
-                            break;
-                          case 23:
-                            text = const Text('23:00', style: style);
-                            break;
-                          default:
-                            text = const Text('', style: style);
-                            break;
-                        }
-                        return SideTitleWidget(
-                          axisSide: meta.axisSide,
-                          child: text,
-                        );
-                      },
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
                     ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: 5,
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        return Text(
-                          '${value.toInt()}°C',
-                          style: const TextStyle(
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: bottomReserved,
+                        interval: 4,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          final style = TextStyle(
                             color: Colors.grey,
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        );
-                      },
-                      reservedSize: 42,
+                            fontSize: labelFont,
+                          );
+                          Widget text;
+                          switch (value.toInt()) {
+                            case 0:
+                              text = Text('00:00', style: style);
+                              break;
+                            case 6:
+                              text = Text('06:00', style: style);
+                              break;
+                            case 12:
+                              text = Text('12:00', style: style);
+                              break;
+                            case 18:
+                              text = Text('18:00', style: style);
+                              break;
+                            case 23:
+                              text = Text('23:00', style: style);
+                              break;
+                            default:
+                              text = Text('', style: style);
+                              break;
+                          }
+                          return SideTitleWidget(
+                            axisSide: meta.axisSide,
+                            child: text,
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ),
-                borderData: FlBorderData(
-                  show: true,
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                minX: 0,
-                maxX: 23,
-                minY: 18,
-                maxY: 32,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: _temperatureData,
-                    isCurved: true,
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.red.shade400,
-                        Colors.orange.shade400,
-                      ],
-                    ),
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: false,
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.red.shade400.withOpacity(0.3),
-                          Colors.orange.shade400.withOpacity(0.1),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 5,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          return Text(
+                            '${value.toInt()}°C',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                              fontSize: labelFont,
+                            ),
+                          );
+                        },
+                        reservedSize: leftReserved,
                       ),
                     ),
                   ),
-                ],
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  minX: 0,
+                  maxX: 23,
+                  minY: 18,
+                  maxY: 32,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: _temperatureData,
+                      isCurved: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.red.shade400,
+                          Colors.orange.shade400,
+                        ],
+                      ),
+                      barWidth: isSmall ? 3 : 4,
+                      isStrokeCapRound: true,
+                      dotData: FlDotData(
+                        show: false,
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.red.shade400.withOpacity(0.25),
+                            Colors.orange.shade400.withOpacity(0.1),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -609,33 +656,47 @@ class _HomeViewState extends State<HomeView> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
+          const SizedBox(height: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _buildModeButton(
-                  'Automático',
-                  Icons.auto_awesome,
-                  _aiMode == 'Automático',
-                  () => _changeAiMode('Automático'),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, color: Color(0xFF1565C0)),
+                    const SizedBox(width: 8),
+                    Consumer<IAControlController>(
+                      builder: (context, controller, _) {
+                        final modo = controller.control?.modo ?? _aiMode;
+                        return Text(
+                          'Modo actual: ' + modo,
+                          style: TextStyle(color: Colors.grey.shade800, fontWeight: FontWeight.w600),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildModeButton(
-                  'Manual',
-                  Icons.touch_app,
-                  _aiMode == 'Manual',
-                  () => _changeAiMode('Manual'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildModeButton(
-                  'Híbrido',
-                  Icons.blur_on,
-                  _aiMode == 'Híbrido',
-                  () => _changeAiMode('Híbrido'),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Get.toNamed('/ia-control'),
+                  icon: const Icon(Icons.tune),
+                  label: const Text('Abrir Control de IA'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1565C0),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 46),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ),
             ],

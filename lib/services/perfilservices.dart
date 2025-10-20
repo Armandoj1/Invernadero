@@ -27,7 +27,10 @@ class UserService {
 
   Future<bool> updateUserProfile(String userId, ProfileModel profile) async {
     try {
-      await _firestore.collection('users').doc(userId).update(profile.toJson());
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .set(profile.toJson(), SetOptions(merge: true));
       return true;
     } catch (e) {
       print('Error al actualizar perfil de usuario: $e');
