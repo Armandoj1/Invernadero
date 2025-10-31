@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import 'package:invernadero/controllers/ia_control_controller.dart';
+import 'package:invernadero/controllers/dashboard_controller.dart';
+import 'package:invernadero/controllers/sensor_controller.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -37,6 +39,20 @@ class _HomeViewState extends State<HomeView> {
     super.initState();
     _generateHistoricalData();
     _startTemperatureSimulation();
+    
+    // Cargar datos de los controladores (solo si están disponibles)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final context = Get.context;
+        if (context != null) {
+          final sensorController = Provider.of<SensorController>(context, listen: false);
+          sensorController.load();
+        }
+      } catch (e) {
+        // Los controladores aún no están disponibles, ignorar
+        print('Controladores no disponibles aún: $e');
+      }
+    });
   }
 
   @override
@@ -140,6 +156,53 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  Widget _buildDemoBanner(BuildContext context) {
+    return Consumer<SensorController>(
+      builder: (context, controller, _) {
+        if (controller.error?.contains('demostración') == true) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.amber.shade200, width: 2),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.amber.shade800, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '📡 Modo Demostración',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.amber.shade900,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Mostrando datos simulados. El sistema está funcionando en modo offline.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.amber.shade800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -193,6 +256,9 @@ class _HomeViewState extends State<HomeView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Banner de modo demostración
+            _buildDemoBanner(context),
+            const SizedBox(height: 16),
             // Encabezado
             _buildHeader(),
             const SizedBox(height: 20),

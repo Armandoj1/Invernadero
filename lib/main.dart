@@ -10,6 +10,9 @@ import 'package:invernadero/ui/home/perfil.dart';
 import 'package:invernadero/controllers/ia_control_controller.dart';
 import 'package:invernadero/services/ia_control_service.dart';
 import 'package:invernadero/ui/home/ia_control.dart';
+import 'package:invernadero/controllers/sensor_controller.dart';
+import 'package:invernadero/controllers/dispositivo_controller.dart';
+import 'package:invernadero/controllers/dashboard_controller.dart';
 import 'controllers/auth_controller.dart';
 import 'firebase_options.dart';
 import 'ui/auth/login_view.dart';
@@ -69,6 +72,21 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<IAControlController>(
           create: (_) => IAControlController(service: IAControlService()),
         ),
+        ChangeNotifierProvider<SensorController>(
+          create: (_) => SensorController(),
+        ),
+        ChangeNotifierProvider<DispositivoController>(
+          create: (_) => DispositivoController(),
+        ),
+        // DashboardController comentado temporalmente por dependencias circulares
+        // Se inicializará más tarde o se usará con ProxyProvider
+        // ChangeNotifierProvider<DashboardController>(
+        //   create: (context) => DashboardController(
+        //     sensorController: Provider.of<SensorController>(context, listen: false),
+        //     dispositivoController: Provider.of<DispositivoController>(context, listen: false),
+        //     iaController: Provider.of<IAControlController>(context, listen: false),
+        //   ),
+        // ),
       ],
       child: GetMaterialApp(
         title: 'Invernadero',

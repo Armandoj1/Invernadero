@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.9.0 <4.0.0"
+  sdk: ">=3.7.0 <4.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -41,6 +41,15 @@ dependencies:
   firebase_auth: ^5.3.1
   get: ^4.6.6
   fl_chart: ^0.68.0
+  
+  # Dependencias adicionales para funcionalidades nuevas
+  dio: ^5.4.0              # HTTP client avanzado para REST API
+  web_socket_channel: ^2.4.0  # WebSocket para tiempo real
+  pdf: ^3.10.0             # Generación de PDFs
+  path_provider: ^2.1.0    # Rutas de sistema de archivos
+  shared_preferences: ^2.2.0  # Persistencia local
+  uuid: ^4.2.0             # Generación de IDs únicos
+  intl: ^0.18.0            # Formateo de fechas/números
 
 dev_dependencies:
   flutter_test:
