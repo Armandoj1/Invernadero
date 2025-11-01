@@ -10,22 +10,67 @@ class LettuceDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF00BCD4),
         elevation: 0,
-        title: Row(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(8),
+            Text(
+              'AgriSense Pro',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
-              child: const Icon(Icons.spa, color: Colors.white, size: 20),
             ),
-            const SizedBox(width: 8),
-            const Text('Lechuga – Historial', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            Text(
+              'Lechuga - Historial',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.notifications_outlined, color: Colors.white),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: const Text(
+                      '1',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            onPressed: () {
+              // TODO: Mostrar notificaciones
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _firebaseService.getRtdbHistorical(),
@@ -93,6 +138,8 @@ class LettuceDetailScreen extends StatelessWidget {
             Navigator.pushReplacementNamed(context, '/dashboard');
           } else if (index == 1) {
             Navigator.pushReplacementNamed(context, '/sensors');
+          } else if (index == 2) {
+            Navigator.pushReplacementNamed(context, '/ai-control');
           } else if (index == 3) {
             Navigator.pushReplacementNamed(context, '/alerts');
           } else if (index == 4) {

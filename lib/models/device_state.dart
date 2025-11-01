@@ -62,4 +62,28 @@ class DeviceState {
       userId: json['userId'],
     );
   }
+
+  DeviceState copyWith({
+    bool? pumpActive,
+    bool? fanActive,
+    bool? lightsActive,
+    bool? heaterActive,
+    int? fanSpeed,
+    int? irrigationDurationSec,
+    int? lightLevel,
+    DateTime? timestamp,
+    String? userId,
+  }) {
+    return DeviceState(
+      pumpActive: pumpActive ?? this.pumpActive,
+      fanActive: fanActive ?? this.fanActive,
+      lightsActive: lightsActive ?? this.lightsActive,
+      heaterActive: heaterActive ?? this.heaterActive,
+      fanSpeed: fanSpeed ?? this.fanSpeed,
+      irrigationDurationSec: irrigationDurationSec ?? this.irrigationDurationSec,
+      lightLevel: lightLevel ?? this.lightLevel,
+      timestamp: timestamp ?? this.timestamp,
+      userId: userId ?? this.userId,
+    );
+  }
 }

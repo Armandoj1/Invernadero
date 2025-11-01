@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/firebase_service.dart';
+import '../services/notification_service.dart';
 import '../models/sensor_data.dart';
 import '../models/device_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'notifications_screen.dart';
 
 class SensorsScreen extends StatefulWidget {
   const SensorsScreen({Key? key}) : super(key: key);
@@ -18,41 +20,82 @@ class _SensorsScreenState extends State<SensorsScreen> {
   int _fanSpeed = 0;
   int _irrigationDurationSec = 0;
   int _lightLevel = 0;
+  bool _isInitialized = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF00BCD4),
         elevation: 0,
-        title: Row(
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.home,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Text(
+            Text(
               'AgriSense Pro',
               style: TextStyle(
-                color: Colors.black,
+                color: Colors.white,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Sensores y Control',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
               ),
             ),
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.black),
-            onPressed: () {},
+          StreamBuilder<int>(
+            stream: NotificationService().getUnreadCount(userId),
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data ?? 0;
+
+              return IconButton(
+                icon: Stack(
+                  children: [
+                    const Icon(Icons.notifications_outlined, color: Colors.white),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                onPressed: () {
+                  Get.to(() => const NotificationsScreen());
+                },
+              );
+            },
           ),
         ],
       ),
@@ -215,47 +258,6 @@ class _SensorsScreenState extends State<SensorsScreen> {
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sensors),
-            label: 'Sensores',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.auto_awesome),
-            label: 'Control IA',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Alertas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.eco),
-            label: 'Cultivos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Reportes',
-          ),
-        ],
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushReplacementNamed(context, '/dashboard');
-          } else if (index == 3) {
-            Navigator.pushReplacementNamed(context, '/alerts');
-          } else if (index == 4) {
-            Navigator.pushReplacementNamed(context, '/cultivos');
-          }
-        },
-      ),
     );
   }
 
@@ -393,9 +395,13 @@ class _SensorsScreenState extends State<SensorsScreen> {
       stream: firebaseService.getCurrentDeviceState(userId),
       builder: (context, stateSnapshot) {
         final current = stateSnapshot.data ?? DeviceState.initial(userId);
-        _fanSpeed = current.fanSpeed;
-        _irrigationDurationSec = current.irrigationDurationSec;
-        _lightLevel = current.lightLevel;
+        // Solo inicializar valores una vez desde Firebase
+        if (!_isInitialized && stateSnapshot.hasData) {
+          _fanSpeed = current.fanSpeed;
+          _irrigationDurationSec = current.irrigationDurationSec;
+          _lightLevel = current.lightLevel;
+          _isInitialized = true;
+        }
         return Card(
           elevation: 2,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

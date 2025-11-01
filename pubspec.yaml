@@ -47,6 +47,9 @@ dependencies:
   path_provider: ^2.1.5
   pdf: ^3.11.3
   firebase_database: ^11.3.10
+  flutter_markdown: ^0.7.4+1
+  flutter_svg: ^2.0.10
+  font_awesome_flutter: ^10.7.0
 
 dev_dependencies:
   flutter_test:
@@ -71,9 +74,11 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - lib/assets/groq-text.svg
+    - lib/assets/lechuga.svg
+    - lib/assets/tomate.svg
+    - lib/assets/pimenton.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

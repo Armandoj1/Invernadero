@@ -2,8 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/firebase_service.dart';
+import '../services/notification_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../controllers/auth_controller.dart';
+import 'notifications_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   final String userId;
@@ -16,94 +18,81 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Row(
-          children: [
-            const Text(
-              'AgriSensePro',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 8),
-            StreamBuilder<String>(
-              stream: FirebaseService().getSelectedPlantType(userId),
-              builder: (context, snapshot) {
-                final plant = snapshot.data ?? 'Lechuga';
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    plant,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
+        backgroundColor: const Color(0xFF00BCD4),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
         ),
-        backgroundColor: const Color(0xFF2196F3),
-        actions: [
-          // Notificaciones con conteo dinámico de alertas activas
-          StreamBuilder<List<Map<String, dynamic>>>(
-            stream: firebaseService.getRtdbHistorical(),
-            builder: (context, snapshot) {
-              int activeCount = 0;
-              if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                // Encontrar la última lectura para Lechuga
-                Map<String, dynamic>? latest;
-                for (final item in snapshot.data!.reversed) {
-                  if ((item['planta'] ?? '') == 'Lechuga') { latest = item; break; }
-                }
-                latest ??= snapshot.data!.last;
-
-                // Evaluar alertas activas sobre la última lectura
-                final double temp = ((latest['temperatura'] ?? 0) as num).toDouble();
-                final double humAir = ((latest['humedad_aire'] ?? 0) as num).toDouble();
-                final double humSoil = ((latest['humedad_suelo'] ?? 0) as num).toDouble();
-
-                // Temperatura (Lechuga)
-                if (!(temp >= 15 && temp <= 20)) { activeCount++; }
-                // Humedad aire 70–80%
-                if (!(humAir >= 70 && humAir <= 80)) { activeCount++; }
-                // Humedad suelo 60–80%
-                if (!(humSoil >= 60 && humSoil <= 80)) { activeCount++; }
-              }
-
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications, color: Colors.white),
-                    onPressed: () { Navigator.pushNamed(context, '/alerts'); },
+        title: StreamBuilder<String>(
+          stream: FirebaseService().getSelectedPlantType(userId),
+          builder: (context, snapshot) {
+            final plant = snapshot.data ?? 'Lechuga';
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'AgriSense Pro',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 16,
                   ),
-                  if (activeCount > 0)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          '$activeCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                ),
+                Text(
+                  '$plant - Sector A1',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        actions: [
+          // Notificaciones con conteo dinámico de notificaciones no leídas
+          StreamBuilder<int>(
+            stream: NotificationService().getUnreadCount(userId),
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data ?? 0;
+
+              return IconButton(
+                icon: Stack(
+                  children: [
+                    const Icon(Icons.notifications_outlined, color: Colors.white),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
+                onPressed: () {
+                  Get.to(() => const NotificationsScreen());
+                },
               );
             },
           ),
@@ -148,154 +137,134 @@ class DashboardScreen extends StatelessWidget {
           final double humSoil = ((latest['humedad_suelo'] ?? 0) as num).toDouble();
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Sensor Cards Grid (responsive)
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.8,
+                // Sensor Cards Grid (3 cards in row) - mejoradas
+                Row(
                   children: [
-                    _sensorCard(
-                      title: 'Temperatura',
-                      value: '${temp.toStringAsFixed(1)}°C',
-                      icon: Icons.thermostat_outlined,
-                      color: Colors.blue,
+                    Expanded(
+                      child: _modernSensorCard(
+                        title: 'Temperatura',
+                        value: '${temp.toStringAsFixed(1)}°C',
+                        icon: Icons.thermostat,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
                     ),
-                    _sensorCard(
-                      title: 'Humedad aire',
-                      value: '${humAir.toStringAsFixed(0)}%',
-                      icon: Icons.water_drop_outlined,
-                      color: Colors.blue,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _modernSensorCard(
+                        title: 'Humedad',
+                        value: '${humAir.toStringAsFixed(0)}%',
+                        icon: Icons.water_drop,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF5E72E4), Color(0xFF825EE4)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
                     ),
-                    _sensorCard(
-                      title: 'Humedad suelo',
-                      value: '${humSoil.toStringAsFixed(0)}%',
-                      icon: Icons.grass,
-                      color: Colors.green,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _modernSensorCard(
+                        title: 'Estado IA',
+                        value: 'Óptimo',
+                        icon: Icons.psychology,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2DCE89), Color(0xFF11998E)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                
+                const SizedBox(height: 12),
+
+                // AI Recommendation Card with gradient
+                _aiRecommendationCard(),
+                const SizedBox(height: 12),
+
                 // System Card Simplified
                 _systemCardSimplified(context),
-                const SizedBox(height: 16),
-                
+                const SizedBox(height: 12),
+
                 // Trends Chart
                 _trendsCard(context, entries),
+                const SizedBox(height: 12),
               ],
             ),
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sensors),
-            label: 'Sensores',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.auto_awesome),
-            label: 'Control IA',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Alertas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.eco),
-            label: 'Cultivos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Reportes',
-          ),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.pushReplacementNamed(context, '/sensors');
-          } else if (index == 3) {
-            Navigator.pushReplacementNamed(context, '/alerts');
-          } else if (index == 4) {
-            Navigator.pushReplacementNamed(context, '/cultivos');
-          }
-        },
-      ),
     );
   }
 
-  Widget _sensorCard({
+  Widget _modernSensorCard({
     required String title,
     required String value,
     required IconData icon,
-    required Color color,
+    required Gradient gradient,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: gradient,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Icon(icon, color: Colors.white, size: 32),
+          const SizedBox(height: 8),
           Text(
-            title,
+            value,
             style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 14,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              Icon(icon, color: color),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _recommendationCard() {
+  Widget _aiRecommendationCard() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF2196F3),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF00BCD4), Color(0xFF2196F3)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: const Color(0xFF00BCD4).withOpacity(0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -306,44 +275,34 @@ class DashboardScreen extends StatelessWidget {
         children: [
           Row(
             children: const [
-              Icon(Icons.star, color: Colors.white),
+              Icon(Icons.lightbulb_outline, color: Colors.white, size: 20),
               SizedBox(width: 8),
               Text(
                 'Recomendación IA',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 15,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           const Text(
-            'Condiciones óptimas mantenidas. El sistema está funcionando eficientemente. Continuar con el programa actual.',
+            'Las condiciones actuales son óptimas para el crecimiento de tu cultivo. Todos los parámetros están dentro del rango ideal.',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 14,
+              fontSize: 13,
+              height: 1.4,
             ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Aplicar Automáticamente'),
           ),
         ],
       ),
     );
   }
 
-  Widget _systemStatusCard() {
+  // Card simplificado para el sistema según requerimiento
+  Widget _systemCardSimplified(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -368,39 +327,43 @@ class DashboardScreen extends StatelessWidget {
               color: Colors.black87,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _statusItem(
-                icon: Icons.auto_awesome,
-                label: 'Control IA',
-                status: 'Activo',
-                color: Colors.green,
+              Expanded(
+                child: _modernStatusBadge(
+                  label: 'Control IA',
+                  status: 'Activo',
+                  color: const Color(0xFF2DCE89),
+                ),
               ),
-              _statusItem(
-                icon: Icons.sensors,
-                label: 'Sensores',
-                status: '8/8',
-                color: Colors.blue,
+              const SizedBox(width: 6),
+              Expanded(
+                child: _modernStatusBadge(
+                  label: 'Sensores',
+                  status: '8/8',
+                  color: const Color(0xFF5E72E4),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 6),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _statusItem(
-                icon: Icons.water,
-                label: 'Riego Auto',
-                status: 'Programado',
-                color: Colors.orange,
+              Expanded(
+                child: _modernStatusBadge(
+                  label: 'Riego Auto',
+                  status: 'Programado',
+                  color: const Color(0xFFFB6340),
+                ),
               ),
-              _statusItem(
-                icon: Icons.thermostat,
-                label: 'Clima',
-                status: 'Óptimo',
-                color: Colors.purple,
+              const SizedBox(width: 6),
+              Expanded(
+                child: _modernStatusBadge(
+                  label: 'Clima',
+                  status: 'Óptimo',
+                  color: const Color(0xFF8965E0),
+                ),
               ),
             ],
           ),
@@ -409,106 +372,46 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _statusItem({
-    required IconData icon,
+  Widget _modernStatusBadge({
     required String label,
     required String status,
     required Color color,
   }) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: color, size: 16),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          status,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Card simplificado para el sistema según requerimiento
-  Widget _systemCardSimplified(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            'Sistema',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _statusItem(
-                icon: Icons.psychology_alt,
-                label: 'Control IA',
-                status: 'Inactivo',
-                color: Colors.grey,
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              '$label: ',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w500,
               ),
-              _statusItem(
-                icon: Icons.sensors,
-                label: 'Sensores',
-                status: '3/3',
-                color: Colors.blue,
-              ),
-              _statusItem(
-                icon: Icons.water,
-                label: 'Riego',
-                status: 'Manual',
-                color: Colors.orange,
-              ),
-            ],
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/sensors');
-              },
-              icon: const Icon(Icons.tune, color: Colors.blue),
-              label: const Text(
-                'Abrir control manual',
-                style: TextStyle(color: Colors.blue),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.blue),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
+          Text(
+            status,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -518,7 +421,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _trendsCard(BuildContext context, dynamic data) {
     final firebaseService = FirebaseService();
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -550,31 +453,36 @@ class DashboardScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushNamed(context, '/trends');
                 },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 child: const Text(
                   'Ver Más',
                   style: TextStyle(
-                    color: Colors.blue,
-                    fontSize: 14,
+                    color: Color(0xFF00BCD4),
+                    fontSize: 13,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           StreamBuilder<List<Map<String, dynamic>>>(
             stream: firebaseService.getRtdbHistorical(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-              
+
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return SizedBox(
                   height: 200,
                   child: _buildChart(),
                 );
               }
-              
+
               return SizedBox(
                 height: 220,
                 child: _buildChartFromFirebase(snapshot.data!),

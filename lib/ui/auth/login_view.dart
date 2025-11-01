@@ -81,246 +81,304 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF00BCD4),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            width: double.infinity,
-            child: Form(
-              key: _formKey,
+        child: Center(
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 40),
-                  // App Icon
+                  // White Card Container - ocupa casi toda la pantalla
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2196F3),
+                      color: const Color(0xFFF5F5F5),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(
-                      Icons.home,
-                      color: Colors.white,
-                      size: 40,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  // App Name
-                  const Text(
-                    'AgriSense Pro',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  
-                  // Email field
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Correo electrónico',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          hintText: 'tu@email.com',
-                          prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Ingresa tu correo electrónico';
-                          }
-                          if (!GetUtils.isEmail(value)) {
-                            return 'Ingresa un correo válido';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Password field
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Contraseña',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          hintText: '••••••••',
-                          prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Ingresa tu contraseña';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Remember me and Forgot password
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Checkbox(
-                            value: _rememberMe,
-                            onChanged: (value) {
-                              setState(() {
-                                _rememberMe = value ?? false;
-                              });
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
+                          // App Icon
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2196F3),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            activeColor: const Color(0xFF2196F3),
+                            child: const Icon(
+                              Icons.home,
+                              color: Colors.white,
+                              size: 48,
+                            ),
                           ),
+                          const SizedBox(height: 20),
+                          // App Name
                           const Text(
-                            'Recordarme',
+                            'AgriSense Pro',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
+                          const SizedBox(height: 40),
+                  
+                          // Email field
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: const Text(
+                              'Correo electrónico',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              hintText: 'tu@email.com',
+                              hintStyle: const TextStyle(color: Colors.grey),
+                              prefixIcon: const Icon(Icons.email, color: Colors.grey, size: 20),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Ingresa tu correo electrónico';
+                              }
+                              if (!GetUtils.isEmail(value)) {
+                                return 'Ingresa un correo válido';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Password field
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: const Text(
+                              'Contraseña',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              hintText: '••••••••',
+                              hintStyle: const TextStyle(color: Colors.grey),
+                              prefixIcon: const Icon(Icons.lock, color: Colors.grey, size: 20),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                  color: Colors.grey,
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Ingresa tu contraseña';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Remember me and Forgot password
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _rememberMe,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _rememberMe = value ?? false;
+                                      });
+                                    },
+                                    activeColor: const Color(0xFF00BCD4),
+                                  ),
+                                  const Text(
+                                    'Recordarme',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TextButton(
+                                onPressed: _handleForgotPassword,
+                                child: const Text(
+                                  '¿Olvidaste tu contraseña?',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF00BCD4),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Login button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: _handleLogin,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF00BCD4),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                elevation: 2,
+                              ),
+                              child: const Text(
+                                'Iniciar Sesión',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Divider with "o"
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: Colors.grey.shade400)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Text('o', style: TextStyle(color: Colors.grey.shade600)),
+                              ),
+                              Expanded(child: Divider(color: Colors.grey.shade400)),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Info box about AgriSense Pro
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE3F2FD),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF90CAF9),
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: const [
+                                    Icon(
+                                      Icons.info_outline,
+                                      color: Color(0xFF1976D2),
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Acerca de AgriSense Pro',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1565C0),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Sistema de control de temperatura para invernaderos utilizando lógica difusa e inteligencia artificial. Monitoreo en tiempo real con simulación de sensores para optimizar el crecimiento de cultivos.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF1565C0),
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Register link
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                '¿No tienes cuenta?',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => Get.toNamed('/register'),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                ),
+                                child: const Text(
+                                  'Regístrate aquí',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF00BCD4),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                      TextButton(
-                        onPressed: _handleForgotPassword,
-                        child: const Text(
-                          '¿Olvidaste tu contraseña?',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF2196F3),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Login button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2196F3),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Iniciar Sesión',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Divider
-                  const Row(
-                    children: [
-                      Expanded(child: Divider()),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('o', style: TextStyle(color: Colors.grey)),
-                      ),
-                      Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Register link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        '¿No tienes cuenta?',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => Get.toNamed('/register'),
-                        child: const Text(
-                          'Regístrate aquí',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF2196F3),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),

@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/sensor_data.dart';
 import '../models/device_state.dart';
+import '../models/crop.dart';
 
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -12,6 +13,8 @@ class FirebaseService {
   final String _sensorDataCollection = 'sensor_data';
   final String _deviceStateCollection = 'device_states';
   final String _userSettingsCollection = 'user_settings';
+  final String _cropsCollection = 'crops';
+  final String _cropHistoryCollection = 'crop_history';
   
   Future<void> saveManualScanSpanish({
     required String userId,
@@ -302,6 +305,116 @@ class FirebaseService {
             return snapshot.data()!['controlMode'] as String;
           }
           return 'automatic'; // Valor por defecto
+        });
+  }
+
+  // ===== CRUD DE CULTIVOS =====
+
+  // Crear o actualizar cultivo
+  Future<void> saveCrop(Crop crop) async {
+    try {
+      await _firestore
+          .collection(_cropsCollection)
+          .doc(crop.id)
+          .set(crop.toJson());
+    } catch (e) {
+      throw Exception('Error al guardar cultivo: $e');
+    }
+  }
+
+  // Obtener todos los cultivos activos del usuario
+  Stream<List<Crop>> getUserCrops(String userId) {
+    return _firestore
+        .collection(_cropsCollection)
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+          // Filtrar por status y ordenar en código para evitar índice compuesto
+          final crops = snapshot.docs
+              .map((doc) => Crop.fromJson(doc.data()))
+              .where((crop) => crop.status == 'activo')
+              .toList();
+
+          // Ordenar por fecha de plantado (más reciente primero)
+          crops.sort((a, b) => b.plantedDate.compareTo(a.plantedDate));
+
+          return crops;
+        });
+  }
+
+  // Obtener un cultivo específico
+  Future<Crop?> getCrop(String cropId) async {
+    try {
+      final doc = await _firestore.collection(_cropsCollection).doc(cropId).get();
+      if (doc.exists && doc.data() != null) {
+        return Crop.fromJson(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Error al obtener cultivo: $e');
+    }
+  }
+
+  // Eliminar cultivo (moverlo al historial)
+  Future<void> deleteCrop(String cropId) async {
+    try {
+      final crop = await getCrop(cropId);
+      if (crop != null) {
+        // Guardar en historial
+        await _firestore
+            .collection(_cropHistoryCollection)
+            .doc(cropId)
+            .set(crop.toJson());
+
+        // Eliminar de cultivos activos
+        await _firestore.collection(_cropsCollection).doc(cropId).delete();
+      }
+    } catch (e) {
+      throw Exception('Error al eliminar cultivo: $e');
+    }
+  }
+
+  // Marcar cultivo como cosechado
+  Future<void> harvestCrop(String cropId) async {
+    try {
+      final crop = await getCrop(cropId);
+      if (crop != null) {
+        final harvestedCrop = crop.copyWith(
+          status: 'cosechado',
+          harvestDate: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        // Guardar en historial
+        await _firestore
+            .collection(_cropHistoryCollection)
+            .doc(cropId)
+            .set(harvestedCrop.toJson());
+
+        // Eliminar de cultivos activos
+        await _firestore.collection(_cropsCollection).doc(cropId).delete();
+      }
+    } catch (e) {
+      throw Exception('Error al cosechar cultivo: $e');
+    }
+  }
+
+  // Obtener historial de cultivos del usuario
+  Stream<List<Crop>> getCropHistory(String userId) {
+    return _firestore
+        .collection(_cropHistoryCollection)
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+          // Ordenar en código para evitar índice compuesto
+          final history = snapshot.docs
+              .map((doc) => Crop.fromJson(doc.data()))
+              .toList();
+
+          // Ordenar por updatedAt (más reciente primero)
+          history.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+          return history;
         });
   }
 }
