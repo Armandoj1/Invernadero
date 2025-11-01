@@ -215,15 +215,21 @@ class AlertService {
     return _firestore
         .collection(_alertsCollection)
         .where('userId', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
         .limit(100)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
+      final alerts = snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        // Asegurarnos de que el ID del documento coincida
+        if (!data.containsKey('id') || data['id'] != doc.id) {
+          data['id'] = doc.id;
+        }
         return AlertModel.fromJson(data);
       }).toList();
+
+      // Ordenar en memoria en lugar de en la consulta para evitar índice
+      alerts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return alerts;
     });
   }
 
@@ -233,14 +239,19 @@ class AlertService {
         .collection(_alertsCollection)
         .where('userId', isEqualTo: userId)
         .where('isRead', isEqualTo: false)
-        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
+      final alerts = snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        if (!data.containsKey('id') || data['id'] != doc.id) {
+          data['id'] = doc.id;
+        }
         return AlertModel.fromJson(data);
       }).toList();
+
+      // Ordenar en memoria
+      alerts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return alerts;
     });
   }
 

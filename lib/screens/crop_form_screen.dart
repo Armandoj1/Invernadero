@@ -416,36 +416,43 @@ Solo responde con el JSON, sin texto adicional.
               const SizedBox(height: 24),
 
               // Parámetros óptimos
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Parámetros Óptimos (Opcional)'),
-                  TextButton.icon(
-                    onPressed: _isLoadingGroq ? null : _adjustWithGroq,
-                    icon: _isLoadingGroq
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00BCD4)),
-                          )
-                        : SvgPicture.asset(
-                            'lib/assets/groq-text.svg',
-                            height: 14,
-                            colorFilter: const ColorFilter.mode(
-                              Color(0xFF00BCD4),
-                              BlendMode.srcIn,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildSectionTitle('Parámetros Óptimos (Opcional)'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _isLoadingGroq ? null : _adjustWithGroq,
+                      icon: _isLoadingGroq
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00BCD4)),
+                            )
+                          : SvgPicture.asset(
+                              'lib/assets/groq-text.svg',
+                              height: 14,
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFF00BCD4),
+                                BlendMode.srcIn,
+                              ),
                             ),
-                          ),
-                    label: Text(
-                      _isLoadingGroq ? 'Ajustando...' : 'Ajustar con GROQ',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                      label: Text(
+                        _isLoadingGroq ? 'Ajustando...' : 'Ajustar con GROQ',
+                        style: const TextStyle(fontSize: 13),
                       ),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF00BCD4),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF00BCD4),
+                        side: const BorderSide(color: Color(0xFF00BCD4)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
                     ),
                   ),
                 ],

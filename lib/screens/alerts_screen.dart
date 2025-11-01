@@ -26,10 +26,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
         backgroundColor: const Color(0xFF00BCD4),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: () {
-            // TODO: Abrir drawer/menú lateral
-          },
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(),
         ),
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,

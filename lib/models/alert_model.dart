@@ -41,7 +41,7 @@ class AlertModel {
       'currentValue': currentValue,
       'minThreshold': minThreshold,
       'maxThreshold': maxThreshold,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': timestamp.millisecondsSinceEpoch,
       'isRead': isRead,
       'isAutomatic': isAutomatic,
     };
@@ -59,7 +59,13 @@ class AlertModel {
       currentValue: (json['currentValue'] ?? 0).toDouble(),
       minThreshold: (json['minThreshold'] ?? 0).toDouble(),
       maxThreshold: (json['maxThreshold'] ?? 0).toDouble(),
-      timestamp: DateTime.parse(json['timestamp']),
+      timestamp: json['timestamp'] != null
+          ? (json['timestamp'] is int
+              ? DateTime.fromMillisecondsSinceEpoch(json['timestamp'])
+              : (json['timestamp'] is String
+                  ? DateTime.parse(json['timestamp'])
+                  : DateTime.now()))
+          : DateTime.now(),
       isRead: json['isRead'] ?? false,
       isAutomatic: json['isAutomatic'] ?? true,
     );

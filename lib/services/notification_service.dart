@@ -42,15 +42,21 @@ class NotificationService {
     return _firestore
         .collection(_notificationsCollection)
         .where('userId', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
         .limit(50)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
+      final notifications = snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        // Asegurarnos de que el ID del documento coincida
+        if (!data.containsKey('id') || data['id'] != doc.id) {
+          data['id'] = doc.id;
+        }
         return NotificationModel.fromJson(data);
       }).toList();
+
+      // Ordenar en memoria en lugar de en la consulta para evitar índice
+      notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return notifications;
     });
   }
 

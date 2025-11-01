@@ -29,7 +29,7 @@ class NotificationModel {
       'title': title,
       'message': message,
       'iconType': iconType,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': timestamp.millisecondsSinceEpoch,
       'isRead': isRead,
       'data': data,
     };
@@ -43,8 +43,12 @@ class NotificationModel {
       title: json['title'] ?? '',
       message: json['message'] ?? '',
       iconType: json['iconType'],
-      timestamp: json['timestamp'] is String
-          ? DateTime.parse(json['timestamp'])
+      timestamp: json['timestamp'] != null
+          ? (json['timestamp'] is int
+              ? DateTime.fromMillisecondsSinceEpoch(json['timestamp'])
+              : (json['timestamp'] is String
+                  ? DateTime.parse(json['timestamp'])
+                  : DateTime.now()))
           : DateTime.now(),
       isRead: json['isRead'] ?? false,
       data: json['data'] as Map<String, dynamic>?,

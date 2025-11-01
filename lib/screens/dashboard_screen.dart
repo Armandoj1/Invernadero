@@ -136,12 +136,21 @@ class DashboardScreen extends StatelessWidget {
           final double humAir = ((latest['humedad_aire'] ?? 0) as num).toDouble();
           final double humSoil = ((latest['humedad_suelo'] ?? 0) as num).toDouble();
 
+          // Evaluar alertas activas sobre la última lectura
+          int activeAlertCount = 0;
+          // Temperatura (Lechuga: 15-20°C óptimo)
+          if (!(temp >= 15 && temp <= 20)) { activeAlertCount++; }
+          // Humedad aire 70–80%
+          if (!(humAir >= 70 && humAir <= 80)) { activeAlertCount++; }
+          // Humedad suelo 60–80%
+          if (!(humSoil >= 60 && humSoil <= 80)) { activeAlertCount++; }
+
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Sensor Cards Grid (3 cards in row) - mejoradas
+                // Sensor Cards Grid (2x2 grid) - mejoradas
                 Row(
                   children: [
                     Expanded(
@@ -159,11 +168,28 @@ class DashboardScreen extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _modernSensorCard(
-                        title: 'Humedad',
+                        title: 'Humedad Aire',
                         value: '${humAir.toStringAsFixed(0)}%',
-                        icon: Icons.water_drop,
+                        icon: Icons.air,
                         gradient: const LinearGradient(
                           colors: [Color(0xFF5E72E4), Color(0xFF825EE4)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _modernSensorCard(
+                        title: 'Humedad Suelo',
+                        value: '${humSoil.toStringAsFixed(0)}%',
+                        icon: Icons.water_drop,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4FC3F7), Color(0xFF29B6F6)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -191,7 +217,7 @@ class DashboardScreen extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // System Card Simplified
-                _systemCardSimplified(context),
+                _systemCardSimplified(context, activeAlertCount),
                 const SizedBox(height: 12),
 
                 // Trends Chart
@@ -302,7 +328,7 @@ class DashboardScreen extends StatelessWidget {
   }
 
   // Card simplificado para el sistema según requerimiento
-  Widget _systemCardSimplified(BuildContext context) {
+  Widget _systemCardSimplified(BuildContext context, int activeAlertCount) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -340,9 +366,9 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(width: 6),
               Expanded(
                 child: _modernStatusBadge(
-                  label: 'Sensores',
-                  status: '8/8',
-                  color: const Color(0xFF5E72E4),
+                  label: 'Alertas',
+                  status: activeAlertCount > 0 ? '$activeAlertCount Activas' : 'Normal',
+                  color: activeAlertCount > 0 ? const Color(0xFFFB6340) : const Color(0xFF2DCE89),
                 ),
               ),
             ],
@@ -354,15 +380,15 @@ class DashboardScreen extends StatelessWidget {
                 child: _modernStatusBadge(
                   label: 'Riego Auto',
                   status: 'Programado',
-                  color: const Color(0xFFFB6340),
+                  color: const Color(0xFF8965E0),
                 ),
               ),
               const SizedBox(width: 6),
               Expanded(
                 child: _modernStatusBadge(
-                  label: 'Clima',
-                  status: 'Óptimo',
-                  color: const Color(0xFF8965E0),
+                  label: 'Sensores',
+                  status: '3/3',
+                  color: const Color(0xFF5E72E4),
                 ),
               ),
             ],

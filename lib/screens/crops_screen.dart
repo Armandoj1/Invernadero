@@ -9,6 +9,7 @@ import '../models/crop.dart';
 import 'crop_form_screen.dart';
 import 'crop_history_screen.dart';
 import 'notifications_screen.dart';
+import 'lettuce_detail_screen.dart';
 
 class CropsScreen extends StatelessWidget {
   const CropsScreen({Key? key}) : super(key: key);
@@ -128,7 +129,13 @@ class CropsScreen extends StatelessWidget {
 
               // Item fijo de Lechuga (ejemplo)
               GestureDetector(
-                onTap: () => Get.toNamed('/cultivos/lechuga'),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => LettuceDetailScreen(),
+                    ),
+                  );
+                },
                 child: Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(

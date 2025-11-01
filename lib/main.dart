@@ -7,7 +7,6 @@ import 'firebase_options.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/alert_controller.dart';
 import 'ui/auth/login_view.dart';
-import 'screens/lettuce_detail_screen.dart';
 import 'screens/trends_detail_screen.dart';
 import 'screens/main_navigation_screen.dart';
 
@@ -44,7 +43,6 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/login', page: () => const LoginView()),
         GetPage(name: '/dashboard', page: () => const MainNavigationScreen()),
         GetPage(name: '/register', page: () => RegisterView()),
-        GetPage(name: '/cultivos/lechuga', page: () => LettuceDetailScreen()),
         GetPage(name: '/trends', page: () => const TrendsDetailScreen()),
       ],
     );
