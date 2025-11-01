@@ -417,4 +417,49 @@ class FirebaseService {
           return history;
         });
   }
+
+  // Guardar configuraciones de usuario
+  Future<void> saveUserSettings(String userId, String settingKey, Map<String, dynamic> settings) async {
+    try {
+      await _firestore
+          .collection(_userSettingsCollection)
+          .doc(userId)
+          .set({settingKey: settings}, SetOptions(merge: true));
+    } catch (e) {
+      print('Error al guardar configuraciones de usuario: $e');
+      rethrow;
+    }
+  }
+
+  // Obtener configuraciones de usuario
+  Future<Map<String, dynamic>?> getUserSettings(String userId, String settingKey) async {
+    try {
+      final doc = await _firestore
+          .collection(_userSettingsCollection)
+          .doc(userId)
+          .get();
+      
+      if (doc.exists && doc.data()?[settingKey] != null) {
+        return doc.data()![settingKey] as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      print('Error al obtener configuraciones de usuario: $e');
+      return null;
+    }
+  }
+
+  // Stream para configuraciones de usuario
+  Stream<Map<String, dynamic>?> getUserSettingsStream(String userId, String settingKey) {
+    return _firestore
+        .collection(_userSettingsCollection)
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) {
+          if (snapshot.exists && snapshot.data()?[settingKey] != null) {
+            return snapshot.data()![settingKey] as Map<String, dynamic>;
+          }
+          return null;
+        });
+  }
 }

@@ -5,6 +5,7 @@ import '../services/notification_service.dart';
 import '../models/sensor_data.dart';
 import '../models/device_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'notifications_screen.dart';
 
 class SensorsScreen extends StatefulWidget {
@@ -21,6 +22,55 @@ class _SensorsScreenState extends State<SensorsScreen> {
   int _irrigationDurationSec = 0;
   int _lightLevel = 0;
   bool _isInitialized = false;
+  bool _simulationActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSimulationState();
+  }
+
+  // Método para cargar el estado actual de la simulación
+  Future<void> _loadSimulationState() async {
+    try {
+      final snapshot = await FirebaseDatabase.instance.ref("control/simulacion_activa").get();
+      if (snapshot.exists) {
+        setState(() {
+          _simulationActive = snapshot.value as bool? ?? false;
+        });
+      }
+    } catch (e) {
+      print('Error al cargar estado de simulación: $e');
+    }
+  }
+
+  // Método para alternar la simulación
+  Future<void> _toggleSimulation() async {
+    try {
+      final newState = !_simulationActive;
+      await FirebaseDatabase.instance.ref("control/simulacion_activa").set(newState);
+      
+      setState(() {
+        _simulationActive = newState;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_simulationActive 
+            ? 'Simulación activada correctamente' 
+            : 'Simulación desactivada correctamente'),
+          backgroundColor: _simulationActive ? Colors.green : Colors.orange,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cambiar simulación: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -520,6 +570,52 @@ class _SensorsScreenState extends State<SensorsScreen> {
                       firebaseService.saveDeviceState(state);
                     },
                     child: const Text('Aplicar Luminosidad'),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Botón de Simulación
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _simulationActive ? Colors.red[50] : Colors.green[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _simulationActive ? Colors.red[300]! : Colors.green[300]!,
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.science,
+                            color: _simulationActive ? Colors.red[700] : Colors.green[700],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Estado de Simulación: ${_simulationActive ? "ACTIVA" : "INACTIVA"}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: _simulationActive ? Colors.red[700] : Colors.green[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: _toggleSimulation,
+                        icon: Icon(_simulationActive ? Icons.stop : Icons.play_arrow),
+                        label: Text(_simulationActive ? 'Desactivar Simulación' : 'Activar Simulación'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _simulationActive ? Colors.red : Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
