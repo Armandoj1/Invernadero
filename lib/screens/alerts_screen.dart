@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../services/alert_service.dart';
-import '../models/alert_model.dart';
-import '../controllers/auth_controller.dart';
-import 'package:intl/intl.dart';
+import '../services/firebase_service.dart';
 
 class AlertsScreen extends StatefulWidget {
   const AlertsScreen({Key? key}) : super(key: key);
@@ -13,13 +10,10 @@ class AlertsScreen extends StatefulWidget {
 }
 
 class _AlertsScreenState extends State<AlertsScreen> {
-  final AlertService _alertService = AlertService();
+  final FirebaseService _firebaseService = FirebaseService();
 
   @override
   Widget build(BuildContext context) {
-    final authController = Get.find<AuthController>();
-    final userId = authController.user?.uid ?? '';
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
@@ -51,56 +45,163 @@ class _AlertsScreenState extends State<AlertsScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.done_all, color: Colors.white),
-            onPressed: () async {
-              await _alertService.markAllAsRead(userId);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Todas las alertas marcadas como leídas')),
-              );
-            },
-            tooltip: 'Marcar todas como leídas',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_sweep, color: Colors.white),
+            icon: const Icon(Icons.info_outline, color: Colors.white),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Eliminar todas las alertas'),
-                  content: const Text('¿Deseas eliminar todas las alertas?'),
+                  title: const Text('Alertas en Tiempo Real'),
+                  content: const Text(
+                    'Las alertas se calculan automáticamente basándose en los datos actuales de los sensores. '
+                    'Se muestran cuando las condiciones están fuera del rango óptimo para el tipo de cultivo.',
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancelar'),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        await _alertService.deleteAllAlerts(userId);
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Alertas eliminadas')),
-                        );
-                      },
-                      child: const Text('Eliminar'),
+                      child: const Text('Entendido'),
                     ),
                   ],
                 ),
               );
             },
-            tooltip: 'Eliminar todas',
+            tooltip: 'Información',
           ),
         ],
       ),
-      body: StreamBuilder<List<AlertModel>>(
-        stream: _alertService.getAlerts(userId),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _firebaseService.getRtdbHistorical(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final alerts = snapshot.data ?? [];
+          final entries = snapshot.data ?? [];
+          if (entries.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 80,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No hay datos de sensores',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
 
-          if (alerts.isEmpty) {
+          // Obtener última lectura de Lechuga
+          Map<String, dynamic>? latest;
+          for (final item in entries.reversed) {
+            if ((item['planta'] ?? '') == 'Lechuga') {
+              latest = item;
+              break;
+            }
+          }
+          latest ??= entries.last;
+
+          final double temp = ((latest['temperatura'] ?? 0) as num).toDouble();
+          final double humAir = ((latest['humedad_aire'] ?? 0) as num).toDouble();
+          final double humSoil = ((latest['humedad_suelo'] ?? 0) as num).toDouble();
+          final String fecha = (latest['fecha'] ?? '') as String;
+
+          // Calcular alertas basadas en rangos óptimos para Lechuga
+          final List<Map<String, dynamic>> activeAlerts = [];
+
+          // Temperatura (15-20°C óptimo)
+          if (!(temp >= 15 && temp <= 20)) {
+            String severity = 'medium';
+            String title = '';
+            String message = '';
+
+            if (temp < 7) {
+              severity = 'critical';
+              title = 'Temperatura Crítica Baja';
+              message = 'La temperatura está en ${temp.toStringAsFixed(1)}°C. Está muy por debajo del rango óptimo (15-20°C). Riesgo de congelación de las plantas.';
+            } else if (temp < 15) {
+              severity = temp < 10 ? 'high' : 'medium';
+              title = 'Temperatura Baja';
+              message = 'La temperatura está en ${temp.toStringAsFixed(1)}°C. El rango óptimo es 15-20°C. Considera activar el calefactor.';
+            } else if (temp > 27) {
+              severity = 'critical';
+              title = 'Temperatura Crítica Alta';
+              message = 'La temperatura está en ${temp.toStringAsFixed(1)}°C. Está muy por encima del rango óptimo (15-20°C). Riesgo de estrés térmico severo.';
+            } else {
+              severity = temp > 24 ? 'high' : 'medium';
+              title = 'Temperatura Alta';
+              message = 'La temperatura está en ${temp.toStringAsFixed(1)}°C. El rango óptimo es 15-20°C. Considera activar el ventilador o abrir ventilación.';
+            }
+
+            activeAlerts.add({
+              'title': title,
+              'message': message,
+              'severity': severity,
+              'plantType': 'Lechuga',
+              'timestamp': fecha,
+            });
+          }
+
+          // Humedad aire (70-80% óptimo)
+          if (!(humAir >= 70 && humAir <= 80)) {
+            String severity = 'medium';
+            String title = '';
+            String message = '';
+
+            if (humAir < 70) {
+              severity = humAir < 50 ? 'high' : 'medium';
+              title = 'Humedad del Aire Baja';
+              message = 'La humedad del aire está en ${humAir.toStringAsFixed(1)}%. El rango óptimo es 70-80%. Considera usar humidificadores.';
+            } else {
+              severity = humAir > 90 ? 'high' : 'medium';
+              title = 'Humedad del Aire Alta';
+              message = 'La humedad del aire está en ${humAir.toStringAsFixed(1)}%. El rango óptimo es 70-80%. Mejora la ventilación para reducir humedad.';
+            }
+
+            activeAlerts.add({
+              'title': title,
+              'message': message,
+              'severity': severity,
+              'plantType': 'Lechuga',
+              'timestamp': fecha,
+            });
+          }
+
+          // Humedad suelo (60-80% óptimo)
+          if (!(humSoil >= 60 && humSoil <= 80)) {
+            String severity = 'medium';
+            String title = '';
+            String message = '';
+
+            if (humSoil < 60) {
+              severity = humSoil < 40 ? 'high' : 'medium';
+              title = 'Humedad del Suelo Baja';
+              message = 'La humedad del suelo está en ${humSoil.toStringAsFixed(1)}%. El rango óptimo es 60-80%. Activa el sistema de riego.';
+            } else {
+              severity = humSoil > 90 ? 'high' : 'medium';
+              title = 'Humedad del Suelo Alta';
+              message = 'La humedad del suelo está en ${humSoil.toStringAsFixed(1)}%. El rango óptimo es 60-80%. Reduce el riego para evitar encharcamiento.';
+            }
+
+            activeAlerts.add({
+              'title': title,
+              'message': message,
+              'severity': severity,
+              'plantType': 'Lechuga',
+              'timestamp': fecha,
+            });
+          }
+
+          if (activeAlerts.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -132,24 +233,12 @@ class _AlertsScreenState extends State<AlertsScreen> {
             );
           }
 
-          // Separar alertas no leídas y leídas
-          final unreadAlerts = alerts.where((a) => !a.isRead).toList();
-          final readAlerts = alerts.where((a) => a.isRead).toList();
-
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (unreadAlerts.isNotEmpty) ...[
-                _sectionTitle('Alertas Activas', unreadAlerts.length),
-                const SizedBox(height: 8),
-                ...unreadAlerts.map((alert) => _buildAlertCard(alert, userId)),
-                const SizedBox(height: 24),
-              ],
-              if (readAlerts.isNotEmpty) ...[
-                _sectionTitle('Alertas Leídas', readAlerts.length),
-                const SizedBox(height: 8),
-                ...readAlerts.map((alert) => _buildAlertCard(alert, userId, isRead: true)),
-              ],
+              _sectionTitle('Alertas Activas', activeAlerts.length),
+              const SizedBox(height: 8),
+              ...activeAlerts.map((alert) => _buildAlertCardFromData(alert)),
             ],
           );
         },
@@ -188,150 +277,113 @@ class _AlertsScreenState extends State<AlertsScreen> {
     );
   }
 
-  Widget _buildAlertCard(AlertModel alert, String userId, {bool isRead = false}) {
-    final timeFormat = DateFormat('dd/MM/yyyy HH:mm');
-    final severityConfig = _getSeverityConfig(alert.severity);
+  Widget _buildAlertCardFromData(Map<String, dynamic> alert) {
+    final severityConfig = _getSeverityConfig(alert['severity']);
 
-    return Dismissible(
-      key: Key(alert.id),
-      direction: DismissDirection.endToStart,
-      onDismissed: (direction) {
-        _alertService.deleteAlert(alert.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Alerta eliminada'),
-            action: SnackBarAction(
-              label: 'Deshacer',
-              onPressed: () {
-                _alertService.saveAlert(alert);
-              },
-            ),
-          ),
-        );
-      },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: Colors.red,
-          borderRadius: BorderRadius.circular(12),
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: severityConfig['color'],
+          width: 2,
         ),
-        child: const Icon(Icons.delete, color: Colors.white),
       ),
-      child: Card(
-        elevation: isRead ? 0 : 2,
-        margin: const EdgeInsets.only(bottom: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: isRead ? Colors.grey.shade200 : severityConfig['color'],
-            width: isRead ? 1 : 2,
-          ),
-        ),
-        child: InkWell(
-          onTap: () {
-            if (!alert.isRead) {
-              _alertService.markAsRead(alert.id);
-            }
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: severityConfig['color'].withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        severityConfig['icon'],
-                        color: severityConfig['color'],
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: severityConfig['color'].withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    severityConfig['icon'],
+                    color: severityConfig['color'],
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  alert.title,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: isRead ? Colors.grey : Colors.black87,
-                                  ),
-                                ),
+                          Expanded(
+                            child: Text(
+                              alert['title'],
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
                               ),
-                              if (!alert.isRead)
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF2196F3),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            severityConfig['label'],
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: severityConfig['color'],
-                              fontWeight: FontWeight.w600,
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF2196F3),
+                              shape: BoxShape.circle,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  alert.message,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isRead ? Colors.grey.shade600 : Colors.black87,
-                    height: 1.4,
+                      const SizedBox(height: 4),
+                      Text(
+                        severityConfig['label'],
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: severityConfig['color'],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(Icons.eco, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 4),
-                    Text(
-                      alert.plantType,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const Spacer(),
-                    Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 4),
-                    Text(
-                      timeFormat.format(alert.timestamp),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 12),
+            Text(
+              alert['message'],
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.eco, size: 16, color: Colors.grey.shade600),
+                const SizedBox(width: 4),
+                Text(
+                  alert['plantType'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const Spacer(),
+                Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
+                const SizedBox(width: 4),
+                Text(
+                  alert['timestamp'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
