@@ -61,8 +61,8 @@ class _RegisterViewState extends State<RegisterView> {
           colorText: Colors.green.shade900,
           snackPosition: SnackPosition.BOTTOM,
         );
-        // Redirigir a la página de inicio después del registro exitoso
-        Get.offAllNamed('/');
+        // Redirigir a la página de dashboard después del registro exitoso
+        Get.offAllNamed('/dashboard');
       }
     }
   }
@@ -70,9 +70,10 @@ class _RegisterViewState extends State<RegisterView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF00BCD4),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        title: const Text('Crear Cuenta'),
+        backgroundColor: const Color(0xFF2196F3),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -83,13 +84,13 @@ class _RegisterViewState extends State<RegisterView> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Card(
-            elevation: 8,
+            elevation: 1,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              padding: const EdgeInsets.all(32.0),
+              constraints: const BoxConstraints(maxWidth: 420),
+              padding: const EdgeInsets.all(24.0),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -97,31 +98,32 @@ class _RegisterViewState extends State<RegisterView> {
                   children: [
                     // Logo
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      width: 72,
+                      height: 72,
                       decoration: BoxDecoration(
                         color: const Color(0xFF2196F3),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
-                        Icons.home_outlined,
-                        size: 48,
+                        Icons.home,
                         color: Colors.white,
+                        size: 36,
                       ),
                     ),
                     const SizedBox(height: 24),
 
                     // Título
                     const Text(
-                      'Crear Cuenta',
+                      'Regístrate en AgriSense Pro',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF212121),
+                        color: Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Únete a Invernadero',
+                      'Crea tu cuenta para gestionar tu invernadero',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey.shade600,
@@ -135,12 +137,14 @@ class _RegisterViewState extends State<RegisterView> {
                       decoration: InputDecoration(
                         labelText: 'Nombre',
                         hintText: 'Tu nombre',
-                        prefixIcon: const Icon(Icons.person_outline),
+                        prefixIcon: const Icon(Icons.person_outline, color: Colors.grey),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -157,12 +161,14 @@ class _RegisterViewState extends State<RegisterView> {
                       decoration: InputDecoration(
                         labelText: 'Apellido',
                         hintText: 'Tu apellido',
-                        prefixIcon: const Icon(Icons.person_outline),
+                        prefixIcon: const Icon(Icons.person_outline, color: Colors.grey),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -179,12 +185,14 @@ class _RegisterViewState extends State<RegisterView> {
                       decoration: InputDecoration(
                         labelText: 'Correo electrónico',
                         hintText: 'tu@email.com',
-                        prefixIcon: const Icon(Icons.email_outlined),
+                        prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
@@ -205,12 +213,14 @@ class _RegisterViewState extends State<RegisterView> {
                       decoration: InputDecoration(
                         labelText: 'Teléfono',
                         hintText: 'Tu número de teléfono',
-                        prefixIcon: const Icon(Icons.phone_outlined),
+                        prefixIcon: const Icon(Icons.phone_outlined, color: Colors.grey),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
                       keyboardType: TextInputType.phone,
                       validator: (value) {
@@ -228,12 +238,14 @@ class _RegisterViewState extends State<RegisterView> {
                       decoration: InputDecoration(
                         labelText: 'Dirección',
                         hintText: 'Tu dirección',
-                        prefixIcon: const Icon(Icons.location_on_outlined),
+                        prefixIcon: const Icon(Icons.location_on_outlined, color: Colors.grey),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -251,12 +263,13 @@ class _RegisterViewState extends State<RegisterView> {
                       decoration: InputDecoration(
                         labelText: 'Contraseña',
                         hintText: 'Mínimo 6 caracteres',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
+                            color: Colors.grey,
                           ),
                           onPressed: () {
                             setState(() {
@@ -265,10 +278,12 @@ class _RegisterViewState extends State<RegisterView> {
                           },
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -289,12 +304,13 @@ class _RegisterViewState extends State<RegisterView> {
                       decoration: InputDecoration(
                         labelText: 'Confirmar contraseña',
                         hintText: 'Repite tu contraseña',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirmPassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
+                            color: Colors.grey,
                           ),
                           onPressed: () {
                             setState(() {
@@ -303,10 +319,12 @@ class _RegisterViewState extends State<RegisterView> {
                           },
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -329,12 +347,12 @@ class _RegisterViewState extends State<RegisterView> {
                                 ? null
                                 : _handleRegister,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF00BCD4),
+                              backgroundColor: const Color(0xFF2196F3),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                              elevation: 2,
+                              elevation: 0,
                             ),
                             child: _authController.isLoading.value
                                 ? const CircularProgressIndicator(
@@ -366,7 +384,7 @@ class _RegisterViewState extends State<RegisterView> {
                           child: const Text(
                             'Inicia sesión',
                             style: TextStyle(
-                              color: Color(0xFF00BCD4),
+                              color: Color(0xFF2196F3),
                               fontWeight: FontWeight.w600,
                             ),
                           ),

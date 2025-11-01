@@ -41,6 +41,12 @@ dependencies:
   firebase_auth: ^5.3.1
   get: ^4.6.6
   fl_chart: ^0.68.0
+  intl: ^0.20.2
+  open_file: ^3.5.10
+  share_plus: ^12.0.1
+  path_provider: ^2.1.5
+  pdf: ^3.11.3
+  firebase_database: ^11.3.10
 
 dev_dependencies:
   flutter_test:
